@@ -1,0 +1,140 @@
+mongodb:
+Database > collections > documents.
+
+1. to create database
+use databasename
+eg. use mydb
+
+2. to list the current database in which we are on:
+> db
+
+3. to list all the databases type,
+> show dbs
+(note: database might not show up if it doesnt have any documents, therefore database which are having documents will only be visible
+
+4. insert command
+> db.mycollection.insert({"name":"max"})
+
+>db.inventory.insertOne(
+   { item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } }
+)
+
+5. to drop a database:
+> db.dropDatabase()  - it will drop the database currently which you are in.
+
+6. to create collection
+> db.createCollection("myCollection")
+another way
+>db.mycollection2.insert({"name":"bhoutik"})
+
+6b. to rename a collection
+>db.rrecord.renameCollection("record")
+this will change the name of the collection to record. if there is a collection with the name of record then this command will fail.
+ 
+
+7.  to see the collections
+> show collections
+
+8. to drop a collection
+> db.collection_name.drop()
+eg > db.mycollection.drop()
+
+9. if the collection name has space:
+eg:db.createCollection("demo 5")
+db["demo 5"].insert({"name":"bhtk"})
+db["demo 5"].find() 
+Example:
+School is the database, students are collections, attributes of students are documents.
+> use school - will create a database
+>db.mycollection.insert({"name":"bhtk"}) - this will create a collection named "mycollection" and insert a single statement.
+>db.mycollection.insert([{"name":"kan"},{"sch":"paul"}]) - to insert multiple statements. we need to include square brackets.
+
+9. to query a document
+>db.collection_name.find()
+eg > db.mycollection.find().pretty()
+
+to find with a particular condition
+>db.mycollection.find({"studentid":"4"})
+
+>db.mycollection.find({"studentid": {$gt: 4 }})
+>$gte, $gt, $lt, $lte, $ne
+
+to find document using and or
+>db.students.find( {"fname": "mark", "age": "15"})
+
+
+> db.students.find({
+$or : [{"fname": "mark"},{"age":"15"}]
+})
+
+>db.students.find({
+"fname" : "mark" ,  $or [{"age":"15"},{"age":"16"} }]
+})
+
+>db.students.find == select * from student
+
+//// part 2
+
+>>update command - finds the first updation change and replaces it
+>db.students.update(
+{"id":"1234"} , 
+{$set : {"fname": "steve"}},
+{multi : true}
+)
+
+>> To update the key element in the document:
+eg: db.Employees.update({"name":"pirlo"},{$rename:{"postion":"position"}})
+
+>>save -it saves an entire document again(video 8)
+
+>>remove command for document
+>db.students.remove({}) - removes all documents in the student collection(pass an empty parenthesis).
+
+>db.students.remove({"age":"16"}) - removes particular record from the document. 
+>suppose we only want to delte one record then write the following:
+db.students.remove({"age":"16"} , 1)
+
+//// part 3
+
+
+>>> Projection - it means only the column which we want to get displayed. here 1 means true
+
+>>syntax: db.collection_name.find({},{KEY : 1})
+>>eg: db.students.find({},{"fname" : 1})
+db.longbeach.find({name:"city_of_long_beach"},{famous:1}) /////// first has the condition and second has the column name that we want to project.
+db.longbeach.find({name:"city_of_long_beach"},{famous:1,beach:1})
+
+Important ) how to delete collection with space in it :
+db["collection name"].drop()
+
+update command:
+db.Employees.update({"name":""bhoutik},{$set:{"age":"25"}},{multi:true})
+
+remove command:
+
+db.Employees.remove({"name":"bhoutik"},1)
+
+here 1 is optional, it means remove only one document irrespective of the total present. if we dont mention 1 then all the documents with name bhoutik will be removed.
+
+selection command:
+
+db.Employees.find({"name":"bhoutik"},{"name":1,"postion":1}).pretty()
+
+here it takes 2 parameters. 1 means true and 0 means false
+/////////////////////// part 4
+
+sorting, limiting, skip command
+
+db.Employees.find().limit(4)
+db.Employees.find().skip(3)
+db.Employees.find().sort({"name":1})
+
+here 1 stands for ascending and -1 stands for decending
+
+indexing command:
+
+db.Employees.ensureIndex({"name":1})
+
+db.Employees.getIndexes()
+
+db.Employees.dropIndex({"name":1})
