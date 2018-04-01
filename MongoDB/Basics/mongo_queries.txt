@@ -1,0 +1,126 @@
+>>>MongoDB Aggregation
+
+Student is the name of the collection. 
+
+1. $match:
+
+- It will fetch all the documents specified in the $match clause. It's like where clause in SQL.
+
+Q1) Find all the students whose Section is A.
+
+> var secA = { $match:{"Section":"A"}
+}
+db.Student.aggregate([secA])
+
+or
+
+> db.Student.aggregate([{$match:{"Section":"A"}}])
+
+Q2) Find out all the records where Section is A and Marks is greater then 80
+
+> db.Student.aggregate([{$match:{"Section":"A","Marks":{$gte:70}}}])
+
+or
+
+> db.Student.aggregate([{$match:{$and:[{"Section":"A"},{"Marks":{$gte:80}}]}}])
+
+Q3) Find the students with Student Name as "Ajay" or "Vijay".
+
+> db.Student.aggregate([{$match:{$or:[{"StudentName":"Vijay"},{"StudentName":"Ajay"}]}}])
+
+2. $project
+
+- It is like select clause instead of fetching all the fields, we can certain/specific fields using $project.
+
+- 1 means true and 0 means false.
+
+- IMP) "_id" will be displayed even if you dont mention it as 1. To disable it, explicitly write "_id":0.
+
+Q1) Suppose we only want to display "Section" and "Marks" fields.
+
+> db.Student.aggregate([{$project:{"Section":1,"Marks":1,"_id":0}}])
+
+Q1) Find out "StudentName" and "Marks" from Student collection where "Marks" is greater than 65.
+
+> db.Student.aggregate([{$match:{"Marks":{$gte:65}}},{$project:{"Marks":1,"StudentName":1}}])
+
+> Neater Way:
+var match = { $match:{"Marks":{$gte:65}}
+}
+var project = { $project:{"Marks":1,"StudentName":1}
+}
+db.Student.aggregate([match,project])
+
+Q2) Display the "Section" and "StudentName" fields where "Section" is "A" and "StudentName" is "Ajay".
+
+> db.Student.aggregate([{$match:{$and:[{"Section":"A"},{"StudentName":"Ajay"}]}},{$project:{"Section":"A","StudentName":1}}])  
+
+or 
+
+> var match = {$match:{$and:[{"Section":"A"},{"StudentName":"Ajay"}]}}
+var project = {$project:{"Section":"A","StudentName":1}}
+db.Student.aggregate([match,project])
+
+3. $unwind
+
+- $unwind creates a new document for each array elemet in an array. So basically, $unwind output is a new document of each entry of an array inside a document.
+
+Eg: db.Student.insert({StudentName : "Mark",Section : "A",Marks:70,FavPlayer:["Scholes","Cantona","Rooney"]})
+
+Q1)Lets apply $unwind on a document where name is Mark.
+
+> db.Student.aggregate([{$match:{"StudentName":"Mark"}},{$unwind:"$FavPlayer"}])
+
+Output: { 
+    "_id" : ObjectId("5aa60bb8683356eeb3f64fdc"), 
+    "StudentName" : "Mark", 
+    "Section" : "A", 
+    "Marks" : 70.0, 
+    "FavPlayer" : "Scholes"
+}
+{ 
+    "_id" : ObjectId("5aa60bb8683356eeb3f64fdc"), 
+    "StudentName" : "Mark", 
+    "Section" : "A", 
+    "Marks" : 70.0, 
+    "FavPlayer" : "Cantona"
+}
+{ 
+    "_id" : ObjectId("5aa60bb8683356eeb3f64fdc"), 
+    "StudentName" : "Mark", 
+    "Section" : "A", 
+    "Marks" : 70.0, 
+    "FavPlayer" : "Rooney"
+}
+
+- What if the document does not contain array field. Will mongoDB generate error ? ANS is No. If document contains empty array or does not contain array then pipeline will ignore the input document and will not generate output document for such document. (MongoDB > 3.2version)
+
+Eg: db.Student.insert({StudentName : "Jack",Section : "A",Marks:70,FavPlayer:["Scholes","Cantona","Rooney"]})
+db.Student.insert({StudentName : "John",Section : "B",Marks:80,FavPlayer:[]})
+db.Student.insert({StudentName : "Austin",Section : "C",Marks:90})
+
+Q2) $unwind won't generate output for "John" and "Austin" because array is empty or missing.
+ > db.Student.aggregate([{$match:{StudentName:{$in:["Jack","John","Austin"]}}},{$unwind:"$FavPlayer"}])
+
+Output: { 
+    "_id" : ObjectId("5aa60f4d683356eeb3f64fe4"), 
+    "StudentName" : "Jack", 
+    "Section" : "A", 
+    "Marks" : 70.0, 
+    "FavPlayer" : "Scholes"
+}
+{ 
+    "_id" : ObjectId("5aa60f4d683356eeb3f64fe4"), 
+    "StudentName" : "Jack", 
+    "Section" : "A", 
+    "Marks" : 70.0, 
+    "FavPlayer" : "Cantona"
+}
+{ 
+    "_id" : ObjectId("5aa60f4d683356eeb3f64fe4"), 
+    "StudentName" : "Jack", 
+    "Section" : "A", 
+    "Marks" : 70.0, 
+    "FavPlayer" : "Rooney"
+}
+

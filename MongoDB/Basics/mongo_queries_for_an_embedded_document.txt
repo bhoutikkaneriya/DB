@@ -1,0 +1,54 @@
+// Query an Array of Embedded Documents
+
+// Example
+db.inventory1.insertMany( [
+   { item: "journal", instock: [ { warehouse: "A", qty: 5 }, { warehouse: "C", qty: 15 } ] },
+   { item: "notebook", instock: [ { warehouse: "C", qty: 5 } ] },
+   { item: "paper", instock: [ { warehouse: "A", qty: 60 }, { warehouse: "B", qty: 15 } ] },
+   { item: "planner", instock: [ { warehouse: "A", qty: 40 }, { warehouse: "B", qty: 5 } ] },
+   { item: "postcard", instock: [ { warehouse: "B", qty: 15 }, { warehouse: "C", qty: 35 } ] }
+]);
+
+// to find documents where quantity is greater than 45 irrespective of the wareshouse. >1 document.
+db.inventory1.find({"instock.qty":{$gte:45}})
+db.inventory1.find({"instock":{$elemMatch:{qty:{$gt:45}}}})
+
+// below queries are both different
+db.inventory1.find({"instock":{"warehouse":"A","qty":40}}) // output: 1 document
+db.inventory1.find({"instock":{"qty":40,"warehouse":"A"}}) //output: 0 document
+db.inventory1.find({"instock":{$elemMatch:{"qty":40, "warehouse":"A"}}}) // order does not matter, output: 1 document
+
+
+// below query will generate 0 document because there's not matching document that has only warehouse field.
+db.inventory1.find({instock:{warehouse:"A"}}) 
+
+// suppose you want atleast one embedded document that contains the field qty  and whose value is less than 30
+db.inventory1.find({"instock.qty":{$lt:30}}) // output : 5 documents.
+
+// you can also use the index of an array.
+db.inventory1.find({"instock.0.qty":{$lt:30}}) // output 3 documents
+
+// both the conditions should be matched in any order is fine
+db.inventory1.find( { "instock": { $elemMatch: { qty: 5,warehouse:"D"} } } ) // 0 documents
+db.inventory1.find( { "instock": { $elemMatch: { qty: 5,warehouse:"A"} } } ) // 1 documents - same (both the fields should be present)
+db.inventory1.find( { "instock": { $elemMatch: {warehouse:"A" ,qty: 5} } } ) // 1 documents - same(both the fields should be present)
+
+// order does not matter in these two queries. In one document, any embedded document can contain these values.
+db.inventory1.find({"instock.qty":5,"instock.warehouse":"A"}) // 2 documents.
+db.inventory1.find({"instock.warehouse":"A","instock.qty":5}) // 2 documents
+
+// qty greater than 10 and less than equal to 20
+db.inventory1.find( { "instock": { $elemMatch: { qty: { $gt: 10, $lte: 20 } } } } ) // 3 documents
+
+// Main reason of using $elemMatch. Suppose we want documents wherin warehouse = A and qty = 5(Both the condition should match)
+db.inventory1.find({$and:[{"instock.warehouse":"A","instock.qty":5}]})
+db.inventory1.find({"instock":{$elemMatch:{"warehouse":"A","qty":5}}})
+
+// practice
+db.inventory1.find()
+db.inventory1.find( { "instock.qty": 5, "instock.warehouse": "A" } )
+db.inventory1.find( {"instock.warehouse": "A" ,"instock.qty": 5  } )
+db.inventory1.find({"instock.warehouse":"A"}) // without $elemMatch
+db.inventory1.find({"instock":{$elemMatch:{"warehouse":"A"}}}) // with $elemMatch
+db.inventory1.find({instock:{warehouse:"A",qty:5}}) // output 1 document
+db.inventory1.find({instock:{qty:5,warehouse:"A"}}) // output 0 document

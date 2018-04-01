@@ -1,0 +1,60 @@
+// Queries for an Array
+
+db.inventory.insertMany([
+   { item: "journal", qty: 25, tags: ["blank", "red"], dim_cm: [ 14, 21 ] },
+   { item: "notebook", qty: 50, tags: ["red", "blank"], dim_cm: [ 14, 21 ] },
+   { item: "paper", qty: 100, tags: ["red", "blank", "plain"], dim_cm: [ 14, 21 ] },
+   { item: "planner", qty: 75, tags: ["blank", "red"], dim_cm: [ 22.85, 30 ] },
+   { item: "postcard", qty: 45, tags: ["blue"], dim_cm: [ 10, 15.25 ] }
+]);
+
+db.inventory.find({})
+
+// to find documents which contain either "red" or "plain". > all documents will be displayed
+db.inventory.find({tags:{$in:["red","blue"]}})
+
+// to find documents which contain "red" and "plain" in any order but both should be present. > 25,50,100,75
+db.inventory.find({tags:{$all:["red","blank"]}}) 
+
+// to find documents which contain "red" and "plain" in one order only. > 0 documents
+db.inventory.find({tags:["red","plain"]})
+
+// to find documents which contain "red" and "blank" in one order only. > 1 documents > 50 
+db.inventory.find({tags:["red","blank"]})
+
+// to find all documents which contains red > 4 documents.
+db.inventory.find({tags:"red"})
+
+// to find all documents where dim_cm: is greater than 15 and less than 30 .(matches with atleast one element in the array) > 5 document
+db.inventory.find({"dim_cm":{$gte:15 , $lt:31}})
+db.inventory.find({"dim_cm":{$elemMatch:{$gte:15,$lte:30}}})
+
+// to find documents where dim_cm is greater than 30. so if anyone element is greater than 30, that document will get displayed. > 1
+db.inventory.find({"dim_cm":{$gte:30}})
+
+//practice
+db.inventory.find()
+db.inventory.find({"dim_cm":{$elemMatch:{$gte:14,$lt:20}}})
+
+// Query for an Element by the Array Index Position  > only 1 document // rememeber array position starts with 0
+db.inventory.find({"dim_cm.1":{$gte:25}})
+
+// Query an Array by Array Length > 0 documents.
+db.inventory.find({"dim_cm":{$size:3}})
+
+// Query an Array by Array Length > 0 documents.
+db.inventory.find({"dim_cm":{$size:1}})
+
+// Query an Array by Array Length > 5 documents.
+db.inventory.find({"dim_cm":{$size:2}})
+
+// query an document where tag size is only 1.
+db.inventory.find({"tags":{$size:1}}) // output: 1 document
+
+//practice:
+db.inventory.find({"tags":{$in:["blank","blue"]}}) // op: all documents
+db.inventory.find({"tags":{$all:["blue","blank"]}}) // op: no documents
+db.inventory.find({"tags":{$all:["blank","red"]}}) // op: 4 documents, order doesn't matter
+db.inventory.find({"tags":["red","blank"]}) // order matters, output: only 1 document.
+db.inventory.find({"tags":["blank","red"]}) // order matters, output: 2 documents
+db.inventory.aggregate([{$project:{"size":{$size:"$tags"}}},{$match:{"size":1}}]) // aggregate for fun
